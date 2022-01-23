@@ -32,3 +32,40 @@ view(exp_count)
 # Plotting one paramter ---------------------------------------------------
 # pick parameter want to work w/ 
 imidacloprid_data <- mydata[mydata$PARM_NM=='Imidacloprid, wf', ] # filter also could be used here
+
+# make scatter plot RESULT_VA~PARM_NM [note: this is suppose to be wrong]
+results_parm_scat <- ggplot(imidacloprid_data, aes(PARM_NM, RESULT_VA)) +
+  geom_point()
+results_parm_scat # use geom_jitter() since they're ontop of each other
+# will be doing jitterplot instead since clustered
+results_parm_jit <- ggplot(imidacloprid_data, aes(PARM_NM, RESULT_VA)) +
+  geom_jitter() +
+  theme_classic() +
+  theme(axis.text=element_blank()) +
+  labs(title='CSQA Measurement of Imidacloprid',
+       x='Imidacloprid', y='Concentration Detected [ng/l]')
+  
+results_parm_jit
+
+
+
+
+# Plotting multiple parameters --------------------------------------------
+# select the top five parameters from mydata
+top_5_data <- mydata[mydata$PARM_NM %in% exp_count$PARM_NM[1:5], ]
+top_5_jitterplot <- ggplot(top_5_data, aes(PARM_NM, RESULT_VA)) +
+  geom_jitter(aes(color=PARM_NM)) +
+  theme_classic() +
+  theme(axis.text.x=element_blank()) +
+  labs(title='CSQA Measurement of Various Chemicals',
+       x='Chemical', y='Concentration Detected [ng/l]')
+top_5_jitterplot
+
+# instead, create a facet plot
+top_5_facet <- ggplot(top_5_data, aes(PARM_NM, RESULT_VA)) +
+  geom_jitter(aes(color=PARM_NM)) +
+  facet_wrap(.~PARM_NM, scales='free') +
+  theme_classic() + theme(axis.text.x= element_blank(),
+                          strip.text.x = element_blank())
+# TODO: NEED TO ADD SEPARATE Y-AXIS TITLES OF WHAT THE UNIT OF MEASUREMENT IS
+top_5_facet
