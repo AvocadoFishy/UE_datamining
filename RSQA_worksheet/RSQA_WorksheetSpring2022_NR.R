@@ -49,7 +49,6 @@ results_parm_jit
 
 
 
-
 # Plotting multiple parameters --------------------------------------------
 # select the top five parameters from mydata
 top_5_data <- mydata[mydata$PARM_NM %in% exp_count$PARM_NM[1:5], ]
@@ -63,9 +62,13 @@ top_5_jitterplot
 
 # instead, create a facet plot
 top_5_facet <- ggplot(top_5_data, aes(PARM_NM, RESULT_VA)) +
-  geom_jitter(aes(color=PARM_NM)) +
+  geom_jitter(aes(color=PARM_NM), alpha=0.35) +
   facet_wrap(.~PARM_NM, scales='free') +
-  theme_classic() + theme(axis.text.x= element_blank(),
-                          strip.text.x = element_blank())
-# TODO: NEED TO ADD SEPARATE Y-AXIS TITLES OF WHAT THE UNIT OF MEASUREMENT IS
+  theme_classic() + theme(axis.text.x=element_blank(),
+                          strip.text.x=element_blank(),
+                          axis.title.x=element_blank()) +
+  labs(col='Chemical', y='Concentration', title='CSQA Chemical Concentration in Stream Samples') +
+  scale_color_hue(labels=c('AMPA [ug/l]', 'Glufosinate [ug/l]', 'Glyphosate [ug/l]', 'Imidacloprid [ng/l]', 'Myclobutanil [ng/l]'))
+
 top_5_facet
+
