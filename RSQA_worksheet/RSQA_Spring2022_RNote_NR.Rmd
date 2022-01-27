@@ -1,18 +1,15 @@
 ---
-title: "Spring 2022 RSQA Worksheet"
-author: "Noe Reyna"
-date: "1/26/2022"
-output: html_document
-editor_options: 
-  chunk_output_type: inline
+title: "R Notebook"
+output: html_notebook
 ---
+
 #Loading data into R
 ```{r}
 setwd("G:/My Drive/ComputationalStuff/UrbanEcosystems/Git/RSQA_worksheet")
 library('tidyverse', 'readr')
 library('dplyr')
 mydata <- read.csv('1.21.2022.CSQA_ConstituentGroups=Organics,Pesticides/Results.csv')
-# View(mydata)
+View(mydata)
 
 # 12. show the frequency of parameter measurements done based on the PARM_NM column
 exp_count <- mydata %>% 
@@ -31,7 +28,7 @@ param_count_hist
 # arrange exp_count to only contain >50 observations in desc order
 exp_count <- exp_count[exp_count$count>50,]
 exp_count <- exp_count[order(exp_count$count, decreasing=TRUE), ]
-# view(exp_count)
+view(exp_count)
 ```
 
 
@@ -100,34 +97,12 @@ sites <- read.csv('Sites.csv')
 top_5_joined <- left_join(top_5_data, sites, by='SITE_NO')
 # view(top_5_joined)
 
-# create world map
+# mapping
 world <- ne_countries(scale='medium', returnclass='sf')
 world_map <- ggplot(world) +
   geom_sf() +
   theme_classic() +
   labs(title='World Map', x='Longitude', y='Latitude')
 world_map
-
-# plot data onto world map
-# change title
-world_map <- ggplot(world) +
-  geom_sf() +
-  theme_classic() +
-  labs(title='Map of CSQA Top 5 Contaminants in CSQA sampling sites',
-       x='Longitude', y='Latitude')
-world_map
-
-# add scatter plot
-world_map <- ggplot(world) +
-  geom_sf() +
-  theme_classic() +
-  labs(title='Map of CSQA Top 5 Contaminants in CSQA sampling sites',
-       x='Longitude', y='Latitude',
-       subtitle=paste0('A total of ',(length(unique(sites$SITE_NO))), 'sites')) +
-  geom_point(data=top_5_joined, aes(DEC_LONG_VA, DEC_LAT_VA), size=1, shape=19) +
-  coord_sf(xlim=c(min(sites$DEC_LONG_VA), max(sites$DEC_LONG_VA)),
-           ylim=c(min(sites$DEC_LAT_VA), max(sites$DEC_LAT_VA)))
-world_map
-
 ```
 
