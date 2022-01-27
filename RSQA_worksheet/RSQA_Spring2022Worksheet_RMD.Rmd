@@ -76,6 +76,3 @@ top_5_facet <- ggplot(top_5_data, aes(PARM_NM, RESULT_VA)) +
 
 top_5_facet
 ```
-
-
-
