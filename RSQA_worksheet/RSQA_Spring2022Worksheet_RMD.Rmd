@@ -128,6 +128,25 @@ world_map <- ggplot(world) +
   coord_sf(xlim=c(min(sites$DEC_LONG_VA), max(sites$DEC_LONG_VA)),
            ylim=c(min(sites$DEC_LAT_VA), max(sites$DEC_LAT_VA)))
 world_map
+```
+
+
+
+#Replicating plots
+```{r}
+# get data; filter for Pyrene, solids
+setwd('RSQA_Problemset_Spring2022')
+fig1_data <- read_csv('Results.csv')
+# View(fig1_data)
+fig1_data <- fig1_data %>% 
+  filter(PARM_NM=='Pyrene, solids') %>% 
+  group_by(SITE_NO) %>%
+  top_n(1, RESULT_VA) %>% 
+  select(SITE_NO, RESULT_VA, COUNTY_NM)
+
+# make jitter plot
+ggplot(fig1_data, aes(COUNTY_NM, RESULT_VA)) +
+  geom_jitter(aes(col=COUNTY_NM))
 
 ```
 
