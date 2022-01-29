@@ -147,8 +147,13 @@ fig1_data <- fig1_data %>%
   select(SITE_NO, RESULT_VA, COUNTY_NM)
 # make jitter plot
 ggplot(fig1_data, aes(COUNTY_NM, RESULT_VA)) +
-  geom_jitter(aes(col=COUNTY_NM))
+  geom_jitter(aes(col=COUNTY_NM)) +
+  theme_bw() +
+  theme(axis.title.x = element_blank(), axis.text.x.bottom= element_blank()) +
+  labs(y='Max Concentration of Pyrene per site (ug/kg)', col='Californian County')
+```
 
+```{r}
 # Fig2
 fig2_sites <- read.csv('RSQA_Problemset_Spring2022/Sites.csv')
 fig2_data <- fig1_data
@@ -158,10 +163,9 @@ fig2_data_joined <- left_join(fig2_data, fig2_sites, by='SITE_NO')
 fig2_world <- ne_countries(scale='medium', returnclass='sf')
 fig2_world_map <- ggplot(fig2_world) +
   geom_sf() +
-  theme_classic() +
+  theme_bw() +
   labs(title='World Map', x='Longitude', y='Latitude') +
-  geom_point(data=fig2_data_joined, aes(DEC_LONG_VA, DEC_LAT_VA, color=COUNTY_NM.x,
-                                        size=RESULT_VA, alpha=0.1)) +
+  geom_point(data=fig2_data_joined, aes(DEC_LONG_VA, DEC_LAT_VA, size=RESULT_VA, color=COUNTY_NM.x), alpha=0.45) +
   labs(title='Map of California Sampling Sites',
        subtitle=paste0('A total of ', (length(fig2_data_joined$SITE_NO)), ' sites'),
        color='Californian County', size='Max Pyrene concentration (ug/kg)', 
@@ -169,5 +173,90 @@ fig2_world_map <- ggplot(fig2_world) +
   coord_sf(xlim=c(min(sites$DEC_LONG_VA), max(sites$DEC_LONG_VA)),
            ylim=c(min(sites$DEC_LAT_VA), max(sites$DEC_LAT_VA)))
 fig2_world_map
+```
+
+```{r}
+fig3_data <- read_csv('RSQA_Problemset_Spring2022/Results.csv')
+# first check which has most counts
+fig3_data %>% 
+  group_by(PARM_NM) %>% 
+  summarise(counts=n()) %>% 
+  arrange(desc(counts)) %>%
+  head() # imidaloprid, myclobutanil, ampa, glufosinate, gyphosate TOP 5
+
+fig3_data <- fig3_data %>% 
+  filter(PARM_NM=='Imidacloprid, wf') %>% 
+  group_by(SITE_NO) %>%
+  top_n(1, RESULT_VA) %>% 
+  select(SITE_NO, RESULT_VA, COUNTY_NM)
+# make jitter plot
+ggplot(fig1_data, aes(COUNTY_NM, RESULT_VA)) +
+  geom_jitter(aes(col=COUNTY_NM)) +
+  theme_bw() +
+  theme(axis.title.x = element_blank(), axis.text.x.bottom= element_blank()) +
+  labs(y='Max Concentration of Imidacloprid per site (ug/kg)', col='Californian County')
+```
+```{r}
+fig4_sites <- read.csv('RSQA_Problemset_Spring2022/Sites.csv')
+fig4_data <- fig3_data
+fig4_data_joined <- left_join(fig4_data, fig4_sites, by='SITE_NO')
+# view(fig4_data_joined)
+# create world map
+fig4_world <- ne_countries(scale='medium', returnclass='sf')
+fig4_world_map <- ggplot(fig4_world) +
+  geom_sf() +
+  theme_bw() +
+  labs(title='World Map', x='Longitude', y='Latitude') +
+  geom_point(data=fig4_data_joined, aes(DEC_LONG_VA, DEC_LAT_VA, size=RESULT_VA, color=COUNTY_NM.x), alpha=0.45) +
+  labs(title='Map of California Sampling Sites',
+       subtitle=paste0('A total of ', (length(fig4_data_joined$SITE_NO)), ' sites'),
+       color='Californian County', size='Max Imidacloprid concentration (ug/kg)', 
+       alpha=NA)+
+  coord_sf(xlim=c(min(sites$DEC_LONG_VA), max(sites$DEC_LONG_VA)),
+           ylim=c(min(sites$DEC_LAT_VA), max(sites$DEC_LAT_VA)))
+fig4_world_map
+```
+# Repeat thte same process; however, now use data from different region; I'll be repeating w/ data using NESQA
+```{r}
+fig5_data <- read.csv('G:/My Drive/ComputationalStuff/UrbanEcosystems/Git/RSQA_worksheet/1.28.2022.NESQA_ConstituentGroups=Organics,Pesticides/Results.csv')
+# view(fig5_data)
+fig5_data %>% 
+  group_by(PARM_NM) %>% 
+  summarise(counts=n()) %>% 
+  arrange(desc(counts)) %>%
+  head() # using 1H-1,2,4-Triazole, wf
+
+fig5_data <- fig5_data %>% 
+  filter(PARM_NM=='1H-1,2,4-Triazole, wf') %>% 
+  group_by(SITE_NO) %>%
+  top_n(1, RESULT_VA) %>% 
+  select(SITE_NO, RESULT_VA, COUNTY_NM)
+# make jitter plot
+ggplot(fig5_data, aes(COUNTY_NM, RESULT_VA)) +
+  geom_jitter(aes(col=COUNTY_NM)) +
+  theme_bw() +
+  theme(axis.title.x = element_blank(), axis.text.x.bottom= element_blank()) +
+  labs(y='Max Concentration of s-Triazole per site (ug/kg)', col='Counties')
+```
+##Fig6
+```{r}
+fig6_sites <- read.csv('G:/My Drive/ComputationalStuff/UrbanEcosystems/Git/RSQA_worksheet/1.28.2022.NESQA_ConstituentGroups=Organics,Pesticides/Sites.csv')
+fig6_data <- fig5_data
+fig6_data_joined <- left_join(fig6_data, fig6_sites, by='SITE_NO')
+# view(fig4_data_joined)
+# create world map
+fig6_world <- ne_countries(scale='medium', returnclass='sf')
+fig6_world_map <- ggplot(fig6_world) +
+  geom_sf() +
+  theme_bw() +
+  labs(title='World Map', x='Longitude', y='Latitude') +
+  geom_point(data=fig6_data_joined, aes(DEC_LONG_VA, DEC_LAT_VA, size=RESULT_VA, color=COUNTY_NM.x), alpha=0.45) +
+  labs(title='Map of NESQA Sampling Sites',
+       subtitle=paste0('A total of ', (length(fig6_data_joined$SITE_NO)), ' sites'),
+       color='North East Counties', size='Max s-Triazole concentration (ug/kg)', 
+       alpha=NA)+
+  coord_sf(xlim=c(min(fig6_data_joined$DEC_LONG_VA), max(fig6_data_joined$DEC_LONG_VA)),
+           ylim=c(min(fig6_data_joined$DEC_LAT_VA), max(fig6_data_joined$DEC_LAT_VA)))
+fig6_world_map
 ```
 
