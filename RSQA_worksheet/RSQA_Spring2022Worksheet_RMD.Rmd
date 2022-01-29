@@ -4,7 +4,7 @@ author: "Noe Reyna"
 date: "1/26/2022"
 output: html_document
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 #Loading data into R
 ```{r}
@@ -98,7 +98,7 @@ sites <- read.csv('Sites.csv')
 # head(top_5_data)
 
 top_5_joined <- left_join(top_5_data, sites, by='SITE_NO')
-# view(top_5_joined)
+view(top_5_joined)
 
 # create world map
 world <- ne_countries(scale='medium', returnclass='sf')
@@ -134,19 +134,40 @@ world_map
 
 #Replicating plots
 ```{r}
+getwd()
+# Fig1
 # get data; filter for Pyrene, solids
-setwd('RSQA_Problemset_Spring2022')
-fig1_data <- read_csv('Results.csv')
+# setwd('RSQA_Problemset_Spring2022')
+fig1_data <- read_csv('RSQA_Problemset_Spring2022/Results.csv')
 # View(fig1_data)
 fig1_data <- fig1_data %>% 
   filter(PARM_NM=='Pyrene, solids') %>% 
   group_by(SITE_NO) %>%
   top_n(1, RESULT_VA) %>% 
   select(SITE_NO, RESULT_VA, COUNTY_NM)
-
 # make jitter plot
 ggplot(fig1_data, aes(COUNTY_NM, RESULT_VA)) +
   geom_jitter(aes(col=COUNTY_NM))
 
+# Fig2
+fig2_sites <- read.csv('RSQA_Problemset_Spring2022/Sites.csv')
+fig2_data <- fig1_data
+fig2_data_joined <- left_join(fig2_data, fig2_sites, by='SITE_NO')
+
+# create world map
+fig2_world <- ne_countries(scale='medium', returnclass='sf')
+fig2_world_map <- ggplot(fig2_world) +
+  geom_sf() +
+  theme_classic() +
+  labs(title='World Map', x='Longitude', y='Latitude') +
+  geom_point(data=fig2_data_joined, aes(DEC_LONG_VA, DEC_LAT_VA, color=COUNTY_NM.x,
+                                        size=RESULT_VA, alpha=0.1)) +
+  labs(title='Map of California Sampling Sites',
+       subtitle=paste0('A total of ', (length(fig2_data_joined$SITE_NO)), ' sites'),
+       color='Californian County', size='Max Pyrene concentration (ug/kg)', 
+       alpha=NA)+
+  coord_sf(xlim=c(min(sites$DEC_LONG_VA), max(sites$DEC_LONG_VA)),
+           ylim=c(min(sites$DEC_LAT_VA), max(sites$DEC_LAT_VA)))
+fig2_world_map
 ```
 
