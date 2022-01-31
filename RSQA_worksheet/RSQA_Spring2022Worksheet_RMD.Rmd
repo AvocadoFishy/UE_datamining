@@ -4,7 +4,7 @@ author: "Noe Reyna"
 date: "1/26/2022"
 output: html_document
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 #Loading data into R
 ```{r}
