@@ -4,7 +4,7 @@ author: "Noe Reyna"
 date: "1/26/2022"
 output: html_document
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 #Loading data into R
 ```{r}
@@ -98,7 +98,7 @@ sites <- read.csv('Sites.csv')
 # head(top_5_data)
 
 top_5_joined <- left_join(top_5_data, sites, by='SITE_NO')
-view(top_5_joined)
+# view(top_5_joined)
 
 # create world map
 world <- ne_countries(scale='medium', returnclass='sf')
@@ -163,9 +163,12 @@ fig2_data_joined <- left_join(fig2_data, fig2_sites, by='SITE_NO')
 fig2_world <- ne_countries(scale='medium', returnclass='sf')
 fig2_world_map <- ggplot(fig2_world) +
   geom_sf() +
-  theme_bw() +
+  scale_size_continuous(range=c(1,10), breaks=c(50, 100, 150, 200))+
+  # theme_bw() +
+  # scale_size_continuous(breaks=(50, 1000, 150, 200)) +
+  # scale_size_area(breaks=c(50, 100, 150, 200)) +
   labs(title='World Map', x='Longitude', y='Latitude') +
-  geom_point(data=fig2_data_joined, aes(DEC_LONG_VA, DEC_LAT_VA, size=RESULT_VA, color=COUNTY_NM.x), alpha=0.45) +
+  geom_point(data=fig2_data_joined, aes(DEC_LONG_VA, DEC_LAT_VA, size=RESULT_VA, color=COUNTY_NM.x),shape=16, alpha=0.45) +
   labs(title='Map of California Sampling Sites',
        subtitle=paste0('A total of ', (length(fig2_data_joined$SITE_NO)), ' sites'),
        color='Californian County', size='Max Pyrene concentration (ug/kg)', 
@@ -211,7 +214,7 @@ fig4_world_map <- ggplot(fig4_world) +
   labs(title='Map of California Sampling Sites',
        subtitle=paste0('A total of ', (length(fig4_data_joined$SITE_NO)), ' sites'),
        color='Californian County', size='Max Imidacloprid concentration (ug/kg)', 
-       alpha=NA)+
+       alpha=NA) +
   coord_sf(xlim=c(min(sites$DEC_LONG_VA) - 1, max(sites$DEC_LONG_VA) + 1),
            ylim=c(min(sites$DEC_LAT_VA) - 1, max(sites$DEC_LAT_VA)) + 1)
 fig4_world_map
@@ -260,3 +263,37 @@ fig6_world_map <- ggplot(fig6_world) +
 fig6_world_map
 ```
 
+#Non-detects section
+```{r}
+# THESE TWO PARTS BELOW: are from steps 12-13; shall serve as refereshers of our data
+# show the frequency of parameter measurements done based on the PARM_NM column
+exp_count <- mydata %>% 
+  group_by(PARM_NM) %>% 
+  summarise(count=n())
+
+# create hist
+param_count_hist <- ggplot(exp_count, aes(count)) +
+  geom_histogram(binwidth=50) +
+  labs(title='Distribution showing the number of a unique parameter\'s
+  measurements [x] and respective frequency [y]', x='Measurements on a unique
+  parameter') +
+  theme_classic()
+param_count_hist
+
+# now, we'll only select measurements that were detected meaning non-zero measurements
+detectcount <- mydata %>% 
+  filter(REMARK_CD != '<') %>% # detects
+  filter(RESULT_VA != 'NA') %>% # NAs; note: NA=not measured 
+  filter(REMARK_CD != 'NA') %>% 
+  group_by(PARM_NM) %>%
+  summarise(count=n())
+
+detectcount #compare detectcount vs. original data set
+exp_count #we obviously see noticably more observation in exp_count than detectcount
+
+# plot hist of detectcount
+detectcount_hist <- ggplot(detectcount, aes(count)) + 
+  geom_histogram(binwidth=1)
+detectcount_hist
+
+```
