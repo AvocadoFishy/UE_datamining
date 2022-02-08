@@ -4,7 +4,7 @@ author: "Noe Reyna"
 date: "1/26/2022"
 output: html_document
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 #Loading data into R
 ```{r}
@@ -282,18 +282,73 @@ param_count_hist
 
 # now, we'll only select measurements that were detected meaning non-zero measurements
 detectcount <- mydata %>% 
-  filter(REMARK_CD != '<') %>% # detects
+  filter(REMARK_CD != '<') %>% # filter out detects
   filter(RESULT_VA != 'NA') %>% # NAs; note: NA=not measured 
   filter(REMARK_CD != 'NA') %>% 
   group_by(PARM_NM) %>%
-  summarise(count=n())
+  summarise(count=n()) #%>%
+  #arrange(desc(count))
 
 detectcount #compare detectcount vs. original data set
-exp_count #we obviously see noticably more observation in exp_count than detectcount
+exp_count #we obviously see noticeably more observation in exp_count than detectcount
 
 # plot hist of detectcount
 detectcount_hist <- ggplot(detectcount, aes(count)) + 
   geom_histogram(binwidth=1)
 detectcount_hist
 
+# now that we know the a good portion of our data consist of non-detects, we'll be fitlering them out
+mydata_corr <- mydata %>% 
+  filter(RESULT_VA != 'NA') %>% # remove NAs
+  filter(REMARK_CD != 'NA') %>% 
+  mutate(RESULT_CORR = ifelse(REMARK_CD=='<', 0, RESULT_VA)) # we're going to assign non-detects to value 0
+
+# sort detectcount
+detectcount <- detectcount[order(detectcount$count, decreasing=T), ]
+detectcount
 ```
+Revisiting Plotting data on maps with non-detects data added.
+```{r}
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(ggspatial)
+library(rgeos)
+
+# create top_5_data; below is code i used before revisiting the non-detects section
+# top_5_data <- mydata[mydata$PARM_NM %in% exp_count$PARM_NM[1:5], ]
+new_top_5_data <- mydata_corr[mydata_corr$PARM_NM %in% detectcount$PARM_NM[1:5], ]
+
+# from the Sites.csv, join neww_top_5_data to have coords needed for mapping
+sites_new <- read.csv('1.21.2022.CSQA_ConstituentGroups=Organics,Pesticides/Sites.csv')
+new_top_5_joined <- left_join(new_top_5_data, sites_new, by='SITE_NO')
+
+# now, lets create the map to plot our data on
+new_world <- ne_countries(scale='medium', returnclass='sf')
+new_world_map <- ggplot(new_world) +
+  geom_sf() +
+  theme_classic() +
+  labs(title='World Map', x='Longitude', y='Latitude')
+new_world_map
+
+# plot data onto world map
+# change title
+new_world_map <- ggplot(new_world) +
+  geom_sf() +
+  theme_classic() +
+  labs(title='Map of CSQA Top 5 Contaminants in CSQA sampling sites (after non-detect section has been editted)',
+       x='Longitude', y='Latitude')
+new_world_map
+
+# add scatter plot
+new_world_map <- ggplot(new_world) +
+  geom_sf() +
+  theme_classic() +
+  labs(title='Map of Top 5 Contaminants in CSQA sampling sites',
+       x='Longitude', y='Latitude',
+       subtitle=paste0('A total of ',(length(unique(sites_new$SITE_NO))), ' sites')) +
+  geom_point(data=new_top_5_joined, aes(DEC_LONG_VA, DEC_LAT_VA), size=1, shape=19) +
+  coord_sf(xlim=c(min(sites_new$DEC_LONG_VA) - 1, max(sites_new$DEC_LONG_VA) + 1),
+           ylim=c(min(sites_new$DEC_LAT_VA) - 1, max(sites_new$DEC_LAT_VA) + 1))
+world_map
+```
+
