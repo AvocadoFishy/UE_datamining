@@ -133,6 +133,7 @@ world_map
 
 
 #Replicating plots
+##Fig1
 ```{r}
 getwd()
 # Fig1
@@ -152,7 +153,7 @@ ggplot(fig1_data, aes(COUNTY_NM, RESULT_VA)) +
   theme(axis.title.x = element_blank(), axis.text.x.bottom= element_blank()) +
   labs(y='Max Concentration of Pyrene per site (ug/kg)', col='Californian County')
 ```
-
+##Fig2
 ```{r}
 # Fig2
 fig2_sites <- read.csv('RSQA_Problemset_Spring2022/Sites.csv')
@@ -177,7 +178,7 @@ fig2_world_map <- ggplot(fig2_world) +
            ylim=c(min(sites$DEC_LAT_VA)-1, max(sites$DEC_LAT_VA)+1))
 fig2_world_map
 ```
-
+##Fig3
 ```{r}
 fig3_data <- read_csv('RSQA_Problemset_Spring2022/Results.csv')
 # first check which has most counts
@@ -307,7 +308,7 @@ mydata_corr <- mydata %>%
 detectcount <- detectcount[order(detectcount$count, decreasing=T), ]
 detectcount
 ```
-Revisiting Plotting data on maps with non-detects data added.
+#Revisiting Plotting data on maps with non-detects data added.
 ```{r}
 library(rnaturalearth)
 library(rnaturalearthdata)
@@ -350,5 +351,62 @@ new_world_map <- ggplot(new_world) +
   coord_sf(xlim=c(min(sites_new$DEC_LONG_VA) - 1, max(sites_new$DEC_LONG_VA) + 1),
            ylim=c(min(sites_new$DEC_LAT_VA) - 1, max(sites_new$DEC_LAT_VA) + 1))
 world_map
+```
+##Fig1_redo
+```{r}
+# get data; filter for Pyrene, solids
+redo_fig1_data <- read_csv('RSQA_Problemset_Spring2022/Results.csv')
+redo_fig1_data <- redo_fig1_data %>%
+  filter(RESULT_VA != 'NA') %>% 
+  filter(REMARK_CD != 'NA') %>% 
+  mutate(RESULT_CORR = ifelse(REMARK_CD=='<', 0, RESULT_VA))
+
+# 
+# TODO: Past me put was using top_n() and present me now doesn't know why is used it. I'm going to try to figure out why 
+# why I did that, but it doesn't make sense to use top_n(). With that said, I'll comment it out from this code and compare
+# it to different w/ and w/out that line of code.
+# TODO: UPDATE: NVM, i want to get the max concentratrion detected per site
+redo_fig1_data <- redo_fig1_data %>% 
+  filter(PARM_NM=='Pyrene, solids') %>% 
+  group_by(SITE_NO) %>%
+  top_n(1, RESULT_CORR) %>%
+  select(SITE_NO, RESULT_CORR, COUNTY_NM)
+
+# make jitter plot
+ggplot(redo_fig1_data, aes(COUNTY_NM, RESULT_CORR)) +
+  geom_jitter(aes(col=COUNTY_NM)) +
+  theme_bw() +
+  theme(axis.title.x = element_blank(), axis.text.x.bottom= element_blank()) +
+  labs(y='Max Concentration of Pyrene per site (ug/kg)', col='Californian County')
+# code that i copied and paste from previous sections
+# mydata_corr <- mydata %>% 
+#   filter(RESULT_VA != 'NA') %>% # remove NAs
+#   filter(REMARK_CD != 'NA') %>% 
+#   mutate(RESULT_CORR = ifelse(REMARK_CD=='<', 0, RESULT_VA)) # we're going to assign non-detects to value 0
+```
+##Fig2 Redo
+```{r}
+# Fig2
+redo_fig2_sites <- read.csv('RSQA_Problemset_Spring2022/Sites.csv')
+redo_fig2_data <- redo_fig1_data
+redo_fig2_data_joined <- left_join(redo_fig2_data, redo_fig2_sites, by='SITE_NO')
+
+# create world map
+redo_fig2_world <- ne_countries(scale='medium', returnclass='sf')
+redo_fig2_world_map <- ggplot(redo_fig2_world) +
+  geom_sf() +
+  scale_size_continuous(range=c(1,10), breaks=c(50, 100, 150, 200))+
+  # theme_bw() +
+  # scale_size_continuous(breaks=(50, 1000, 150, 200)) +
+  # scale_size_area(breaks=c(50, 100, 150, 200)) +
+  labs(title='World Map', x='Longitude', y='Latitude') +
+  geom_point(data=redo_fig2_data_joined, aes(DEC_LONG_VA, DEC_LAT_VA, size=RESULT_CORR, color=COUNTY_NM.x),shape=16, alpha=0.45) +
+  labs(title='Map of California Sampling Sites',
+       subtitle=paste0('A total of ', (length(redo_fig2_data_joined$SITE_NO)), ' sites'),
+       color='Californian County', size='Max Pyrene concentration (ug/kg)', 
+       alpha=NA)+
+  coord_sf(xlim=c(min(redo_fig2_sites$DEC_LONG_VA)-1, max(redo_fig2_sites$DEC_LONG_VA)+1),
+           ylim=c(min(redo_fig2_sites$DEC_LAT_VA)-1, max(redo_fig2_sites$DEC_LAT_VA)+1))
+redo_fig2_world_map
 ```
 
