@@ -378,6 +378,7 @@ ggplot(redo_fig1_data, aes(COUNTY_NM, RESULT_CORR)) +
   theme_bw() +
   theme(axis.title.x = element_blank(), axis.text.x.bottom= element_blank()) +
   labs(y='Max Concentration of Pyrene per site (ug/kg)', col='Californian County')
+
 # code that i copied and paste from previous sections
 # mydata_corr <- mydata %>% 
 #   filter(RESULT_VA != 'NA') %>% # remove NAs
@@ -395,10 +396,7 @@ redo_fig2_data_joined <- left_join(redo_fig2_data, redo_fig2_sites, by='SITE_NO'
 redo_fig2_world <- ne_countries(scale='medium', returnclass='sf')
 redo_fig2_world_map <- ggplot(redo_fig2_world) +
   geom_sf() +
-  scale_size_continuous(range=c(1,10), breaks=c(50, 100, 150, 200))+
-  # theme_bw() +
-  # scale_size_continuous(breaks=(50, 1000, 150, 200)) +
-  # scale_size_area(breaks=c(50, 100, 150, 200)) +
+  scale_size_continuous(range=c(1,10), breaks=c(0, 2, 4, 6, 8, 10))+
   labs(title='World Map', x='Longitude', y='Latitude') +
   geom_point(data=redo_fig2_data_joined, aes(DEC_LONG_VA, DEC_LAT_VA, size=RESULT_CORR, color=COUNTY_NM.x),shape=16, alpha=0.45) +
   labs(title='Map of California Sampling Sites',
@@ -408,5 +406,73 @@ redo_fig2_world_map <- ggplot(redo_fig2_world) +
   coord_sf(xlim=c(min(redo_fig2_sites$DEC_LONG_VA)-1, max(redo_fig2_sites$DEC_LONG_VA)+1),
            ylim=c(min(redo_fig2_sites$DEC_LAT_VA)-1, max(redo_fig2_sites$DEC_LAT_VA)+1))
 redo_fig2_world_map
+```
+##Fig3 Redo
+```{r}
+redo_fig3_data <- read_csv('RSQA_Problemset_Spring2022/Results.csv')
+
+redo_fig3_data %>% 
+  filter(PARM_NM=='Imidacloprid, wf') %>%
+  summarise(max_count=max(RESULT_VA))
+
+# first check which has most counts
+redo_fig3_data %>% 
+  group_by(PARM_NM) %>% 
+  summarise(counts=n()) %>% 
+  arrange(desc(counts)) %>%
+  head() # imidaloprid, myclobutanil, ampa, glufosinate, gyphosate TOP 5
+# look like imidaloprid is the most
+
+# first step is to consider non-detects; thus, i'll need to create  RESULT_CORR
+redo_fig3_data <- redo_fig3_data %>% 
+  filter(RESULT_VA != 'NA') %>% # remove NAs
+  filter(REMARK_CD != 'NA') %>%
+  mutate(RESULT_CORR = ifelse(REMARK_CD=='<', 0, RESULT_VA))
+
+# now, we'll group by site then get the max of each. we only care about site_no, result_corr, and county_nm
+redo_fig3_data <- redo_fig3_data %>% 
+  filter(PARM_NM=='Imidacloprid, wf') %>% 
+  group_by(SITE_NO) %>%
+  top_n(1, RESULT_CORR) %>% 
+  select(SITE_NO, RESULT_CORR, COUNTY_NM)
+
+# TODO: I'll need to relabel to hint that the y-axis is distorted by geom jitter
+# below is the jitter plots i made.
+
+# make jitter plot BEING TRUE TO THE Y-AXIS
+ggplot(redo_fig3_data, aes(COUNTY_NM, RESULT_CORR)) +
+  geom_jitter(aes(col=COUNTY_NM), height=0) +
+  theme_bw() +
+  theme(axis.title.x = element_blank(), axis.text.x.bottom= element_blank()) +
+  labs(y='Max Concentration of Imidacloprid per site (ug/kg)', col='Californian County')
+
+# make jitter plot NOT BEING TRUE TO THE Y-AXIS
+ggplot(redo_fig3_data, aes(COUNTY_NM, RESULT_CORR)) +
+  geom_jitter(aes(col=COUNTY_NM)) +
+  theme_bw() +
+  theme(axis.title.x = element_blank(), axis.text.x.bottom= element_blank()) +
+  labs(y='Max Concentration of Imidacloprid per site (ug/kg)', col='Californian County')
+```
+##Fig 4 Redo
+```{r}
+redo_fig4_sites <- read.csv('RSQA_Problemset_Spring2022/Sites.csv')
+# note: we already did the non-detect stuff for redo_fig3_data
+redo_fig4_data <- redo_fig3_data
+redo_fig4_data_joined <- left_join(redo_fig4_data, redo_fig4_sites, by='SITE_NO')
+
+# create world map
+redo_fig4_world <- ne_countries(scale='medium', returnclass='sf')
+redo_fig4_world_map <- ggplot(redo_fig4_world) +
+  geom_sf() +
+  theme_bw() +
+  labs(title='World Map', x='Longitude', y='Latitude') +
+  geom_point(data=fig4_data_joined, aes(DEC_LONG_VA, DEC_LAT_VA, size=RESULT_CORR, color=COUNTY_NM.x), alpha=0.45) +
+  labs(title='Map of California Sampling Sites',
+       subtitle=paste0('A total of ', (length(redo_fig4_data_joined$SITE_NO)), ' sites'),
+       color='Californian County', size='Max Imidacloprid concentration (ug/kg)', 
+       alpha=NA) +
+  coord_sf(xlim=c(min(sites$DEC_LONG_VA) - 1, max(sites$DEC_LONG_VA) + 1),
+           ylim=c(min(sites$DEC_LAT_VA) - 1, max(sites$DEC_LAT_VA)) + 1)
+redo_fig4_world_map
 ```
 
